@@ -4,12 +4,17 @@ from os import system, _exit
 from readchar import readchar
 from random import randrange
 from playsound import playsound
+import platform
 
-rows, columns = 15,20
+clear_screen = "cls" if platform.system() == "Windows" else "clear"
+
+rows, columns = 15, 20
 arena = [[" " for x in range(columns)] for y in range(rows)]
-score=0
+score = 0
+
+
 def displayArena():
-    print(' '*(columns//2+3),'SCORE', ':','\033[36m',score,'\033[00m')
+    print(' '*(columns//2+3), 'SCORE', ':', '\033[36m', score, '\033[00m')
     print("\n ", end="")
     for k in range(2 * columns + 1):
         print("–", end="")
@@ -48,6 +53,7 @@ def readKey():
         elif key == "s" and k in ("a", "s", "d"):
             key = k
 
+
 pos = [[0, 0], [0, 1], [0, 2]]
 for i in pos:
     arena[i[0]][i[1]] = "*"
@@ -64,16 +70,16 @@ def food():
 
 def sound(event):
     if event == "chew":
-        playsound("chew.mp3")
+        playsound("assets/chew.mp3")
     elif event == "gameOver":
-        playsound("failuredrum.mp3")
+        playsound("assets/failuredrum.mp3")
         print("GAME OVER!")
-        playsound("game_over.mp3")
+        playsound("assets/game_over.mp3")
         _exit(1)
 
 
 def foodGen():
-    global arena, hr, hc, pos,score
+    global arena, hr, hc, pos, score
     present = False
     for x in arena:
         if "O" in x:
@@ -81,7 +87,7 @@ def foodGen():
             break
     if not present:
         Thread(target=sound, args=["chew"]).start()
-        score+=1
+        score += 1
         tr, tr_, tc, tc_ = pos[0][0], pos[1][0], pos[0][1], pos[1][1]
         if tr == tr_:
             if tc < tc_:
@@ -108,7 +114,7 @@ def move():
     try:
         global hr, key, hc, tr, tc, pos, f, k
         if pos[-1] in pos[:-1]:
-            print('CRASH!')
+            print('CRASHED INTO BODY!')
             sound("gameOver")
             print("\033[?25h", end="", flush=True)
         if key == "d":
@@ -139,22 +145,24 @@ def move():
 
 
 def show():
+    global clear_screen
     food()
     while True:
-        system("clear")
+        system(clear_screen)
         foodGen()
         displayArena()
         move()
         sleep(0.07)
 
+
 t1, t2 = Thread(target=readKey), Thread(target=show)
 print("\033[?25l", end="", flush=True)
-print("\033[1D",end="")
+print("\033[1D", end="")
 system("clear")
 print("\nUse W,A,S,D to move.Press any key to start...\n")
 displayArena()
 try:
-    if ord(readchar())>0:
+    if ord(readchar()) > 0:
         t1.start()
         t2.start()
 except KeyboardInterrupt:
